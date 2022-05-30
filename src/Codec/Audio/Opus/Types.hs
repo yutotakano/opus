@@ -10,19 +10,19 @@ module Codec.Audio.Opus.Types
  , OpusException(..), ErrorCode, _ErrorCodeException
    -- * EncoderConfig
  , FrameSize
- , EncoderConfig, HasEncoderConfig(..), _EncoderConfig
+ , EncoderConfig, HasEncoderConfig(..), mkEncoderConfig
    -- * DecoderConfig
- , DecoderConfig, HasDecoderConfig(..), _DecoderConfig
+ , DecoderConfig, HasDecoderConfig(..), mkDecoderConfig
    -- * StreamConfig
- , StreamConfig, HasStreamConfig(..), _StreamConfig
+ , StreamConfig, HasStreamConfig(..), mkStreamConfig
    -- * DecoderStreamConfig
- , DecoderStreamConfig, HasDecoderStreamConfig(..), _DecoderStreamConfig
+ , DecoderStreamConfig, HasDecoderStreamConfig(..), mkDecoderStreamConfig
  ) where
 
 import           Codec.Audio.Opus.Internal.Opus
 
-import           Control.Lens.Prism
-import           Control.Lens.TH
+import           Lens.Micro
+import           Lens.Micro.TH
 import           Control.Monad.Catch
 import           Data.Typeable                  (Typeable)
 
@@ -39,9 +39,10 @@ data OpusException
 
 instance Exception OpusException
 
-_ErrorCodeException :: Prism' ErrorCode OpusException
-_ErrorCodeException = prism' errorCodeException' errorCodeException
-
+_ErrorCodeException :: Traversal' ErrorCode OpusException
+_ErrorCodeException f e
+  | Just exc <- errorCodeException e = errorCodeException' <$> f exc
+  | otherwise = pure e
 
 errorCodeException' :: OpusException -> ErrorCode
 errorCodeException' OpusBadArg        = opus_bad_arg
@@ -75,7 +76,9 @@ data EncoderConfig = EncoderConfig
   } deriving (Eq, Show)
 
 makeClassy 'EncoderConfig
-makePrisms 'EncoderConfig
+
+mkEncoderConfig :: SamplingRate -> Bool -> CodingMode -> EncoderConfig
+mkEncoderConfig = EncoderConfig
 
 instance HasSamplingRate EncoderConfig where
   samplingRate = encoderSamplingRate
@@ -89,7 +92,9 @@ data DecoderConfig = DecoderConfig
   } deriving (Eq, Show)
 
 makeClassy 'DecoderConfig
-makePrisms 'DecoderConfig
+
+mkDecoderConfig :: SamplingRate -> Bool -> DecoderConfig
+mkDecoderConfig = DecoderConfig
 
 instance HasSamplingRate DecoderConfig where
   samplingRate = decoderSamplingRate
@@ -104,7 +109,9 @@ data StreamConfig = StreamConfig
   } deriving (Eq, Show)
 
 makeClassy ''StreamConfig
-makePrisms ''StreamConfig
+
+mkStreamConfig :: EncoderConfig -> FrameSize -> Int -> StreamConfig
+mkStreamConfig = StreamConfig
 
 instance HasEncoderConfig StreamConfig where
   encoderConfig = streamEncoderConfig
@@ -122,7 +129,9 @@ data DecoderStreamConfig = DecoderStreamConfig
   } deriving (Eq, Show)
 
 makeClassy ''DecoderStreamConfig
-makePrisms ''DecoderStreamConfig
+
+mkDecoderStreamConfig :: DecoderConfig -> FrameSize -> Int -> DecoderStreamConfig
+mkDecoderStreamConfig = DecoderStreamConfig
 
 instance HasDecoderConfig DecoderStreamConfig where
     decoderConfig = deStreamDecoderConfig

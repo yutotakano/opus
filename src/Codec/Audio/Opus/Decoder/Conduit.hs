@@ -5,7 +5,7 @@ module Codec.Audio.Opus.Decoder.Conduit
 
 import           Codec.Audio.Opus.Decoder
 import           Conduit
-import           Control.Lens.Operators
+import           Lens.Micro
 import           Data.ByteString          (ByteString)
 import qualified Data.ByteString.Lazy     as BL
 import           Data.Conduit.Combinators

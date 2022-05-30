@@ -33,7 +33,8 @@ library
                        resourcet,
                        bytestring,
                        conduit,
-                       lens,
+                       microlens,
+                       microlens-th,
                        hspec
 
 source-repository head
@@ -53,8 +54,5 @@ test-suite hs-mumble-test
                        opus,
                        bytestring,
                        hspec,
-                       http-client-tls,
-                       zlib,
-                       lens,
-                       tar,
+                       microlens,
                        process

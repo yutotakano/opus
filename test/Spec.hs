@@ -2,7 +2,7 @@ module Main(main) where
 
 import           Codec.Audio.Opus.Encoder
 import           Codec.Audio.Opus.Decoder
-import           Control.Lens.Operators
+import           Lens.Micro
 import           Control.Exception
 import           Control.Monad (guard, forM_)
 import qualified Data.ByteString          as B
@@ -15,7 +15,7 @@ import           Test.Hspec
 
 
 cfgs :: [EncoderConfig]
-cfgs = [_EncoderConfig # (sr, s, c) | sr <- srs, s <- ss, c <- cs]
+cfgs = [mkEncoderConfig sr s c | sr <- srs, s <- ss, c <- cs]
   where
     srs = [opusSR48k, opusSR24k, opusSR16k, opusSR12k, opusSR8k ]
     ss = [True, False]
@@ -70,7 +70,7 @@ decodeFile decoderCfg bytes = do
 
         -- line 783
         let outputSamples = maxFrameSize
-        decoded <- opusDecode decoder (_DecoderStreamConfig # (decoderCfg, outputSamples, 0)) inputData
+        decoded <- opusDecode decoder (mkDecoderStreamConfig decoderCfg outputSamples 0) inputData
         -- recursively continue with the rest
         (decoded <>) <$> loop decoder remaining
 
@@ -85,7 +85,7 @@ main = hspec $ do
     describe "opus mono test vectors" $
       forM_ ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] $ \file -> do
         it ("mono testvector " <> file) $ do
-          let decoderCfg = _DecoderConfig # (opusSR48k, False)
+          let decoderCfg = mkDecoderConfig opusSR48k False
           B.readFile ("opus_newvectors/testvector" <> file <> ".bit") >>= decodeFile decoderCfg >>= B.writeFile "tmp.out"
           -- Use readProcessWithExitCode to account for the fact that opus_compare
           -- returns a non-zero exit code if the comparing fails.
@@ -104,7 +104,7 @@ main = hspec $ do
     describe "opus stereo test vectors" $
       forM_ ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] $ \file -> do
         it ("stereo testvector " <> file) $ do
-          let decoderCfg = _DecoderConfig # (opusSR48k, True)
+          let decoderCfg = mkDecoderConfig opusSR48k True
           B.readFile ("opus_newvectors/testvector" <> file <> ".bit") >>= decodeFile decoderCfg >>= B.writeFile "tmp.out"
           -- Use readProcessWithExitCode to account for the fact that opus_compare
           -- returns a non-zero exit code if the comparing fails.

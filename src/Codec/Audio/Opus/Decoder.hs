@@ -13,8 +13,7 @@ module Codec.Audio.Opus.Decoder
 
 import           Codec.Audio.Opus.Internal.Opus
 import           Codec.Audio.Opus.Types
-import           Control.Lens.Fold
-import           Control.Lens.Operators
+import           Lens.Micro
 import           Control.Monad.Catch
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Resource
@@ -96,7 +95,7 @@ opusDecoderDestroy (Decoder (d, err)) = liftIO $
 -- | get last error from decoder
 opusLastError :: MonadIO m => Decoder -> m (Maybe OpusException)
 opusLastError (Decoder (_, fp)) =
-  liftIO $ preview _ErrorCodeException <$> withForeignPtr fp peek
+  liftIO $ (^? _ErrorCodeException) <$> withForeignPtr fp peek
 
 type DecoderAction  a = Ptr DecoderT -> IO a
 
