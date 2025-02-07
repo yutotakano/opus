@@ -2,6 +2,8 @@
 
 ## Unreleased Changes
 
+## 0.2.1.0
+
 - Remove stack from project as Cabal is enough and reduces complexity
 - Received permission from alios (the original author) to release this package under the original name
 - Update project synopsis, description, links, maintainer info etc in .cabal file
