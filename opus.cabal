@@ -36,6 +36,7 @@ copyright:           Markus Barenhoff <mbarenh@alios.org>, Yuto Takano <moa17sto
 category:            Codec
 build-type:          Simple
 cabal-version:       >=1.10
+tested-with:         GHC ==9.4.8
 extra-source-files:
     README.md
     ChangeLog.md
