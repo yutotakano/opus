@@ -2,6 +2,8 @@
 
 ## Unreleased Changes
 
+- Remove stack from project as Cabal is enough and reduces complexity
+
 ## 0.2.0.0
 
 - Decoder and decoder conduit implemented
