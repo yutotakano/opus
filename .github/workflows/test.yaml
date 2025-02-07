@@ -33,9 +33,6 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
 
-      - uses: msys2/setup-msys2@v2
-        if: runner.os == 'Windows'
-
       - name: Set up Haskell
         id: setup-haskell
         uses: haskell-actions/setup@v2
@@ -53,7 +50,11 @@ jobs:
 
       - name: Install libopus (Windows only)
         if: runner.os == 'Windows'
-        run: cabal exec -- pacman -S mingw64/mingw-w64-x86_64-opus
+        shell: pwsh
+        run: |
+          $env:PATH = "C:\msys64\usr\bin;$env:PATH"
+          pacman --noconfirm -S mingw64/mingw-w64-x86_64-opus
+          echo "C:\msys64\mingw64\bin" | Out-File -FilePath "$env:GITHUB_PATH" -Append
 
       - name: Build the project
         run: cabal build
