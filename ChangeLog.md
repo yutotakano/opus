@@ -4,6 +4,8 @@
 
 - Remove stack from project as Cabal is enough and reduces complexity
 - Received permission from alios (the original author) to release this package under the original name
+- Update project synopsis, description, links, maintainer info etc in .cabal file
+- Remove `hspec` from library dependency
 
 ## 0.2.0.0
 

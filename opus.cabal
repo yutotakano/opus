@@ -1,20 +1,48 @@
 name:                opus
 version:             0.2.0.0
-synopsis:            opus audio codec
-description:         haskell ffi binding to reference implementation of opus audio codec
-homepage:            https://github.com/alios/opus#readme
+synopsis:            Bindings to libopus for the Opus audio codec
+description:
+    Provides Haskell FFI bindings to libopus, the reference implementation of
+    the Opus Codec (RFC 6716 and RFC 8251). The Opus codec is designed for
+    interactive speech and audio transmission over the Internet, but is also
+    intended for storage and streaming.
+    .
+    The library provides a an interface to the encoder and decoder, as well as a
+    Conduit wrapper for operating with stream data.
+    .
+    To use this library, you need to have the libopus library installed on your
+    system.
+    .
+    - On Debian-based systems, you can install it with @sudo apt-get install
+      libopus0@.
+    - On MacOS, you can install it with @brew install opus@ using Homebrew.
+    - On Windows (MinGW-based, e.g. GHCup toolchain), you can install it with
+      @cabal exec -- pacman -S mingw64/mingw-w64-x86_64-opus@ (for x64).
+    .
+    The compiled Haskell code will link dynamically by default, so if
+    you are distributing a precompiled binary, you may want to look into
+    static linking.
+    .
+    This package is a fork of the original opus package by Markus Barenhoff,
+    which is no longer maintained (and was never published to Hackage).
+    Permission has been granted by the original author to publish this fork
+    under the same BSD3 license.
+homepage:            https://github.com/yutotakano/opus
 license:             BSD3
 license-file:        LICENSE
-author:              Markus Barenhoff
-maintainer:          mbarenh@alios.org
-copyright:           BSD3
-category:            Web
+author:              Markus Barenhoff <mbarenh@alios.org>
+maintainer:          Yuto Takano <moa17stock@gmail.com>
+copyright:           Markus Barenhoff <mbarenh@alios.org>, Yuto Takano <moa17stock@gmail.com>, Haskell Opus Library Contributors
+category:            Codec
 build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:
     README.md
     ChangeLog.md
 
+source-repository head
+  type:     git
+  location: https://github.com/yutotakano/opus
 
 library
   hs-source-dirs:      src
@@ -40,14 +68,9 @@ library
                        bytestring,
                        conduit,
                        microlens,
-                       microlens-th,
-                       hspec
+                       microlens-th
 
-source-repository head
-  type:     git
-  location: https://github.com/alios/opus
-
-test-suite hs-mumble-test
+test-suite opus-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   default-language:    Haskell2010
