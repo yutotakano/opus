@@ -42,7 +42,7 @@ jobs:
 
       - name: Install libopus (Linux only)
         if: runner.os == 'Linux'
-        run: sudo apt-get install libopus0
+        run: sudo apt-get install libopus-dev
 
       - name: Install libopus (macOS only)
         if: runner.os == 'macOS'

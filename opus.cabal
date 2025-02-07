@@ -14,7 +14,7 @@ description:
     system.
     .
     - On Debian-based systems, you can install it with @sudo apt-get install
-      libopus0@.
+      libopus-dev@.
     - On MacOS, you can install it with @brew install opus@ using Homebrew.
     - On Windows (MinGW-based, e.g. GHCup toolchain), you can install it with
       @cabal exec -- pacman -S mingw64/mingw-w64-x86_64-opus@ (for x64).
