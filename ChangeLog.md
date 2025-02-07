@@ -6,6 +6,7 @@
 - Received permission from alios (the original author) to release this package under the original name
 - Update project synopsis, description, links, maintainer info etc in .cabal file
 - Remove `hspec` from library dependency
+- Fix wrong include path for opus.h in hsc file (on Windows)
 
 ## 0.2.0.0
 
