@@ -33,6 +33,9 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
 
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+
       - name: Set up Haskell
         id: setup-haskell
         uses: haskell-actions/setup@v2
