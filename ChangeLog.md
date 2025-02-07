@@ -3,11 +3,12 @@
 ## Unreleased Changes
 
 - Remove stack from project as Cabal is enough and reduces complexity
+- Received permission from alios (the original author) to release this package under the original name
 
 ## 0.2.0.0
 
 - Decoder and decoder conduit implemented
-- `opus` is forked with the original author's permission to take over the name
+- `opus` is forked from alios (the original author) due to inactivity
 - Add a test suite for encoder and decoder
 - Migrate from `lens` to `microlens` for lighter dependency
 
