@@ -1,0 +1,6 @@
+{
+  "haskell.toolchain": {
+    // We want to use Cabal as the build tool, disable VSCode from downloading Stack
+    "stack": null
+  }
+}
