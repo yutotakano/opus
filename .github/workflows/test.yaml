@@ -58,11 +58,20 @@ jobs:
           # Add the mingw64 bin directory to the PATH so cabal can find pkg-config & opus
           echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Build the project
-        # Use --enable-tests until https://github.com/haskell/cabal/issues/7883
-        # is fixed, as otherwise build will solve dependencies without considering
-        # the test-suite dependencies, and then the tests will fail.
-        run: cabal build --enable-tests
+      - name: Update cabal store
+        run: cabal update
+
+      - name: Create a freeze file for the cache
+        run: cabal freeze --enable-tests
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.setup-haskell.outputs.cabal-store }}
+            dist-newstyle
+          key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.ghc }}-
 
       - name: Run the tests
         # Use --enable-tests until https://github.com/haskell/cabal/issues/7883
