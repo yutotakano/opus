@@ -7,7 +7,7 @@ import           Foreign
 import           Foreign.C.Types
 import           Foreign.C.String
 
-#include <opus/opus.h>
+#include <opus.h>
 
 newtype ErrorCode = ErrorCode { unErrorCode :: CInt }
     deriving (Eq,Show)
