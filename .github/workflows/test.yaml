@@ -59,7 +59,13 @@ jobs:
           echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Build the project
-        run: cabal build
+        # Use --enable-tests until https://github.com/haskell/cabal/issues/7883
+        # is fixed, as otherwise build will solve dependencies without considering
+        # the test-suite dependencies, and then the tests will fail.
+        run: cabal build --enable-tests
 
       - name: Run the tests
-        run: cabal test
+        # Use --enable-tests until https://github.com/haskell/cabal/issues/7883
+        # is fixed, as otherwise cabal test can sometimes reach a local maxima
+        # of dependencies that bizarrely doesn't (!) include the test suite.
+        run: cabal test --enable-tests
