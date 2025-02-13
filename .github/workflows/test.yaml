@@ -51,9 +51,9 @@ jobs:
       - name: Install libopus (Windows only)
         if: runner.os == 'Windows'
         run: |
-          set PATH=C:\msys64\usr\bin;%PATH%
+          set "PATH=C:\msys64\usr\bin;%PATH%"
           pacman --noconfirm -S mingw64/mingw-w64-x86_64-opus mingw64/mingw-w64-x86_64-pkg-config
-          set GITHUB_PATH=C:\msys64\mingw64\bin;%GITHUB_PATH%
+          set "GITHUB_PATH=C:\msys64\mingw64\bin;%GITHUB_PATH%"
 
       - name: Build the project
         run: cabal build
