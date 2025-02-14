@@ -40,6 +40,7 @@ tested-with:         GHC ==9.4.8
 extra-source-files:
     README.md
     ChangeLog.md
+    LICENSE
     test/opus_compare_wrapper.c
     test/opus_compare.c
 
