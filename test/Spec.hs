@@ -9,10 +9,9 @@ import qualified Data.ByteString          as B
 import           Data.Bits
 import           Data.List
 import           Data.Word (Word8)
-import           System.Exit
-import           System.Process
+import           System.Directory (doesDirectoryExist)
 import           Test.Hspec
-
+import qualified OpusCompare as Opus
 
 cfgs :: [EncoderConfig]
 cfgs = [mkEncoderConfig sr s c | sr <- srs, s <- ss, c <- cs]
@@ -31,12 +30,10 @@ testEncoderCreate cfg =
      opusEncoderCreate cfg >>= (`shouldSatisfy` const True)
 
 
-onlyIfOpusCompareExists :: IO () -> IO ()
-onlyIfOpusCompareExists action = do
-  result <- try $ readProcessWithExitCode "./opus_compare" [] ""
-  case (result :: Either IOException (ExitCode, String, String)) of
-    Right (ExitFailure 1, _, _) -> action
-    _ -> fail "opus_compare executable not found"
+onlyIfTestVectorsExist :: IO () -> IO ()
+onlyIfTestVectorsExist action = do
+  exists <- doesDirectoryExist "opus_newvectors"
+  if exists then action else fail "opus_newvectors directory not found"
 
 decodeFile :: DecoderConfig -> B.ByteString -> IO B.ByteString
 decodeFile decoderCfg bytes = do
@@ -78,49 +75,22 @@ main :: IO ()
 main = hspec $ do
   describe "opusEncoderCreate" $
     seqWithCfgs testEncoderCreate
-  around_ onlyIfOpusCompareExists $ do
-    -- These tests require the opus_compare executable to be present in the
-    -- project root, and the opus test vectors, downloaded from the official
+  around_ onlyIfTestVectorsExist $ do
+    -- These tests require the opus test vectors, downloaded from the official
     -- opus website.
     describe "opus mono test vectors" $
       forM_ ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] $ \file -> do
         it ("mono testvector " <> file) $ do
           let decoderCfg = mkDecoderConfig opusSR48k False
           B.readFile ("opus_newvectors/testvector" <> file <> ".bit") >>= decodeFile decoderCfg >>= B.writeFile "tmp.out"
-          -- Use readProcessWithExitCode to account for the fact that opus_compare
-          -- returns a non-zero exit code if the comparing fails.
-          (exitcode1, stdout1, error1) <- readProcessWithExitCode "./opus_compare"
-            ["-r", "48000"
-            , "opus_newvectors/testvector" <> file <> ".dec"
-            , "tmp.out"
-            ] ""
-          (exitcode2, stdout2, error2) <- readProcessWithExitCode "./opus_compare"
-            ["-r", "48000"
-            , "opus_newvectors/testvector" <> file <> "m.dec"
-            , "tmp.out"
-            ] ""
-          shouldSatisfy (error1, error2) $ \(a, b) -> "PASSES" `isInfixOf` a || "PASSES" `isInfixOf` b
+          Opus.compareFiles Opus.Mono opusSR48k ("opus_newvectors/testvector" <> file <> "m.dec") "tmp.out" >>= shouldBe True
 
     describe "opus stereo test vectors" $
       forM_ ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] $ \file -> do
         it ("stereo testvector " <> file) $ do
           let decoderCfg = mkDecoderConfig opusSR48k True
           B.readFile ("opus_newvectors/testvector" <> file <> ".bit") >>= decodeFile decoderCfg >>= B.writeFile "tmp.out"
-          -- Use readProcessWithExitCode to account for the fact that opus_compare
-          -- returns a non-zero exit code if the comparing fails.
-          (exitcode1, stdout1, error1) <- readProcessWithExitCode "./opus_compare"
-            [ "-s"
-            , "-r", "48000"
-            , "opus_newvectors/testvector" <> file <> ".dec"
-            , "tmp.out"
-            ] ""
-          (exitcode2, stdout2, error2) <- readProcessWithExitCode "./opus_compare"
-            [ "-s"
-            , "-r", "48000"
-            , "opus_newvectors/testvector" <> file <> "m.dec"
-            , "tmp.out"
-            ] ""
-          shouldSatisfy (error1, error2) $ \(a, b) -> "PASSES" `isInfixOf` a || "PASSES" `isInfixOf` b
+          Opus.compareFiles Opus.Stereo opusSR48k ("opus_newvectors/testvector" <> file <> ".dec") "tmp.out" >>= shouldBe True
 
 
 {-
