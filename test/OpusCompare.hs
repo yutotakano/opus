@@ -37,7 +37,7 @@ compareFiles channel samplingRate filePath1 filePath2 =
 -- | Call the opus_compare_main function, which should be the main function
 -- within opus_compare.c. We assume that when compiling opus_compare.c, a
 -- define was used to rename the main function to "opus_compare_main".
-foreign import ccall unsafe "opus_compare.c opus_compare_main"
+foreign import ccall unsafe "opus_compare_wrapper.c opus_compare_main"
     c_opus_compare_main
       :: Int
       -- ^ number of arguments
