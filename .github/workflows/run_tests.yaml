@@ -29,6 +29,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix: ${{ fromJSON(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
@@ -72,6 +73,11 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.ghc }}-
+
+      - name: Download Opus test vectors
+        # This creates a folder called opus_newvectors with the test vectors
+        shell: bash
+        run: curl -L https://opus-codec.org/static/testvectors/opus_testvectors-rfc8251.tar.gz | tar -xz
 
       - name: Run the tests
         # Use --enable-tests until https://github.com/haskell/cabal/issues/7883
