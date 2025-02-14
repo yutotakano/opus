@@ -75,6 +75,7 @@ jobs:
 
       - name: Download Opus test vectors
         # This creates a folder called opus_newvectors with the test vectors
+        shell: bash
         run: curl -L https://opus-codec.org/static/testvectors/opus_testvectors-rfc8251.tar.gz | tar -xz
 
       - name: Run the tests
