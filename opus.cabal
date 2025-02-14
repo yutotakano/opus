@@ -37,10 +37,11 @@ copyright:           Markus Barenhoff <mbarenh@alios.org>, Yuto Takano <moa17sto
 category:            Codec
 build-type:          Simple
 tested-with:         GHC ==9.4.8
-extra-source-files:
+extra-doc-files:
     README.md
     ChangeLog.md
     LICENSE
+extra-source-files:
     test/opus_compare_wrapper.c
     test/opus_compare.c
 
