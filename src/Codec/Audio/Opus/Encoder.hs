@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-
+-- | This module contains the high-level API for encoding Opus audio.
 module Codec.Audio.Opus.Encoder
   ( -- * Encoder
     Encoder, OpusException(..)
@@ -22,11 +22,12 @@ import qualified Data.ByteString                as BS
 import qualified Data.ByteString.Lazy           as BL
 import           Foreign
 
--- | Encoder State
+-- | Encoder. Internally, it holds a pointer to the libopus encoder state and
+-- a pointer to the (potential) last Opus error code.
 newtype Encoder = Encoder (ForeignPtr EncoderT, ForeignPtr ErrorCode)
   deriving (Eq, Ord, Show)
 
--- | allocates and initializes an encoder state.
+-- | Allocates and initializes an encoder.
 opusEncoderCreate :: (HasEncoderConfig cfg, MonadIO m) => cfg -> m Encoder
 opusEncoderCreate cfg = liftIO $ do
   let cs = if isStereo then 2 else 1
@@ -39,14 +40,16 @@ opusEncoderCreate cfg = liftIO $ do
   let enc = Encoder (e', err)
   opusLastError enc >>= maybe (pure enc) throwM
 
-
-
 -- | Encode an Opus frame.
 opusEncode
   :: (HasStreamConfig cfg, MonadIO m)
-  => Encoder -- ^ 'Encoder' state
-  -> cfg     -- ^ max data bytes
-  -> ByteString -- ^ input signal (interleaved if 2 channels)
+  => Encoder
+  -- ^ 'Encoder' state
+  -> cfg
+  -- ^ The stream configuration that specifies the frame size, the output size,
+  -- and the encoder configuration (sampling rate, channels, coding mode).
+  -> ByteString
+  -- ^ Input signal (interleaved if 2 channels)
   -> m ByteString
 opusEncode e cfg i =
   let fs = cfg ^. streamFrameSize
@@ -62,13 +65,22 @@ opusEncode e cfg i =
         if l < 0 then throwM OpusInvalidPacket else
           BS.packCStringLen ol
 
+-- | Encode an Opus frame. Returns a lazy 'BL.ByteString'.
 opusEncodeLazy :: (HasStreamConfig cfg, MonadIO m)
-  => Encoder -- ^ 'Encoder' state
+  => Encoder
+  -- ^ 'Encoder' state
   -> cfg
-  -> ByteString -- ^ input signal (interleaved if 2 channels)
+  -- ^ The stream configuration that specifies the frame size, the output size,
+  -- and the encoder configuration (sampling rate, channels, coding mode).
+  -> ByteString
+  -- ^ Input signal (interleaved if 2 channels)
   -> m BL.ByteString
 opusEncodeLazy e cfg = fmap BL.fromStrict . opusEncode e cfg
 
+
+-- | For use with 'ResourceT' or any other monad that implements 'MonadResource'.
+-- Safely allocate an 'Encoder' that will be freed upon exiting the monad, an
+-- exception, or an explicit call to 'Control.Monad.Trans.Resource.release'.
 withOpusEncoder :: (HasEncoderConfig cfg) => MonadResource m
   => cfg
   -> (Encoder -> IO ())
@@ -77,21 +89,22 @@ withOpusEncoder cfg a =
   snd <$> allocate (opusEncoderCreate cfg) a
 
 
--- | Frees an 'Encoder'. Is normaly called automaticly
---   when 'Encoder' gets out of scope
+-- | Frees an 'Encoder'.
 opusEncoderDestroy :: MonadIO m => Encoder -> m ()
 opusEncoderDestroy (Encoder (e, err)) = liftIO $
   finalizeForeignPtr e >> finalizeForeignPtr err
 
 
--- | get last error from encoder
+-- | Get the last error from the encoder.
 opusLastError :: MonadIO m => Encoder -> m (Maybe OpusException)
 opusLastError (Encoder (_, fp)) =
   liftIO $ (^? _ErrorCodeException) <$> withForeignPtr fp peek
 
+-- | An 'EncoderAction' is an IO action that uses a 'EncoderT' for its operation.
 type EncoderAction  a = Ptr EncoderT -> IO a
 
--- | Run an 'EncoderAction'.
+-- | Run an 'EncoderAction' using an 'Encoder', returning either 'OpusException'
+-- for errors or the result of the action.
 withEncoder' :: MonadIO m =>
   Encoder -> EncoderAction a -> m (Either OpusException a)
 withEncoder' e@(Encoder (fp_a, _)) m = liftIO $
@@ -100,7 +113,7 @@ withEncoder' e@(Encoder (fp_a, _)) m = liftIO $
     le <- opusLastError e
     pure $ maybe (Right r) Left le
 
--- | Run an 'EncoderAction'. Might throw an 'OpusException'
+-- | Run an 'EncoderAction'. Might throw an 'OpusException' if the action fails.
 runEncoderAction :: (MonadIO m, MonadThrow m) =>
   Encoder -> EncoderAction a -> m a
 runEncoderAction e m = withEncoder' e m >>= either throwM pure

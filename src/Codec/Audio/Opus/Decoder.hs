@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-
+-- | This module contains the high-level API for decoding Opus audio.
 module Codec.Audio.Opus.Decoder
   ( -- * Decoder
     Decoder, OpusException(..)
@@ -22,11 +22,12 @@ import qualified Data.ByteString                as BS
 import qualified Data.ByteString.Lazy           as BL
 import           Foreign
 
--- | Decoder State
+-- | Decoder. Internally, it holds a pointer to the libopus decoder state and
+-- a pointer to the (potential) last Opus error code.
 newtype Decoder = Decoder (ForeignPtr DecoderT, ForeignPtr ErrorCode)
   deriving (Eq, Ord, Show)
 
--- | allocates and initializes a decoder state.
+-- | Allocates and initializes a decoder.
 opusDecoderCreate :: (HasDecoderConfig cfg, MonadIO m) => cfg -> m Decoder
 opusDecoderCreate cfg = liftIO $ do
   let cs = if isStereo then 2 else 1
@@ -38,14 +39,16 @@ opusDecoderCreate cfg = liftIO $ do
   let enc = Decoder (d', err)
   opusLastError enc >>= maybe (pure enc) throwM
 
-
-
 -- | Decode an Opus frame.
 opusDecode
   :: (HasDecoderStreamConfig cfg, MonadIO m)
-  => Decoder -- ^ 'Decoder' state
-  -> cfg     -- ^ max data bytes
-  -> ByteString -- ^ input signal (interleaved if 2 channels)
+  => Decoder
+  -- ^ 'Decoder' state
+  -> cfg
+  -- ^ The stream configuration that specifies the frame size, whether FEC is
+  -- enabled, and the decoder configuration (sampling rate, channels).
+  -> ByteString
+  -- ^ Input signal (interleaved if 2 channels)
   -> m ByteString
 opusDecode d cfg i =
   let fs = cfg ^. deStreamFrameSize
@@ -70,13 +73,21 @@ opusDecode d cfg i =
           -- but CStringLen expects a CChar which is Int8
           BS.packCStringLen $ (castPtr os, (fromIntegral l) * 2 * chans)
 
+-- | Decode an Opus frame, returning a lazy 'BL.ByteString'.
 opusDecodeLazy :: (HasDecoderStreamConfig cfg, MonadIO m)
-  => Decoder -- ^ 'Decoder' state
+  => Decoder
+  -- ^ 'Decoder' state
   -> cfg
-  -> ByteString -- ^ input signal (interleaved if 2 channels)
+  -- ^ The stream configuration that specifies the frame size, whether FEC is
+  -- enabled, and the decoder configuration (sampling rate, channels).
+  -> ByteString
+  -- ^ Input signal (interleaved if 2 channels)
   -> m BL.ByteString
 opusDecodeLazy d cfg = fmap BL.fromStrict . opusDecode d cfg
 
+-- | For use with 'ResourceT' or any other monad that implements 'MonadResource'.
+-- Safely allocate a 'Decoder' that will be freed upon exiting the monad, an
+-- exception, or an explicit call to 'Control.Monad.Trans.Resource.release'.
 withOpusDecoder :: (HasDecoderConfig cfg) => MonadResource m
   => cfg
   -> (Decoder -> IO ())
@@ -84,22 +95,21 @@ withOpusDecoder :: (HasDecoderConfig cfg) => MonadResource m
 withOpusDecoder cfg a =
   snd <$> allocate (opusDecoderCreate cfg) a
 
-
--- | Frees an 'Decoder'. Is normaly called automaticly
---   when 'Decoder' gets out of scope
+-- | Frees an 'Decoder'.
 opusDecoderDestroy :: MonadIO m => Decoder -> m ()
 opusDecoderDestroy (Decoder (d, err)) = liftIO $
   finalizeForeignPtr d >> finalizeForeignPtr err
 
-
--- | get last error from decoder
+-- | Get the last error from decoder.
 opusLastError :: MonadIO m => Decoder -> m (Maybe OpusException)
 opusLastError (Decoder (_, fp)) =
   liftIO $ (^? _ErrorCodeException) <$> withForeignPtr fp peek
 
+-- | An 'DecoderAction' is an IO action that uses a 'DecoderT' for its operation.
 type DecoderAction  a = Ptr DecoderT -> IO a
 
--- | Run an 'DecoderAction'.
+-- | Run a 'DecoderAction' using a 'Decoder', returning either 'OpusException'
+-- for errors or the result of the action.
 withDecoder' :: MonadIO m =>
   Decoder -> DecoderAction a -> m (Either OpusException a)
 withDecoder' e@(Decoder (fp_a, _)) m = liftIO $
@@ -108,7 +118,7 @@ withDecoder' e@(Decoder (fp_a, _)) m = liftIO $
     le <- opusLastError e
     pure $ maybe (Right r) Left le
 
--- | Run an 'DecoderAction'. Might throw an 'OpusException'
+-- | Run a 'DecoderAction'. Might throw an 'OpusException' if the action fails.
 runDecoderAction :: (MonadIO m, MonadThrow m) =>
   Decoder -> DecoderAction a -> m a
 runDecoderAction d m = withDecoder' d m >>= either throwM pure
