@@ -1,0 +1,80 @@
+name: Run Tests (on push and pull request)
+
+on:
+  pull_request:
+    branches: ['master']
+
+  push:
+    branches: ['master']
+
+jobs:
+  generate-matrix:
+    name: "Generate matrix from cabal file"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract the tested GHC versions
+        id: set-matrix
+        uses: kleidukos/get-tested@v0.1.7.1
+        with:
+          cabal-file: opus.cabal
+          ubuntu-version: "latest"
+          macos-version: "latest"
+          windows-version: "latest"
+          version: 0.1.7.1
+  tests:
+    name: ${{ matrix.ghc }} on ${{ matrix.os }}
+    needs: generate-matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix: ${{ fromJSON(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Haskell
+        id: setup-haskell
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: "latest"
+
+      - name: Install libopus (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install libopus-dev
+
+      - name: Install libopus (macOS only)
+        if: runner.os == 'macOS'
+        run: brew install opus
+
+      - name: Install libopus (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:PATH = "C:\msys64\usr\bin;$env:PATH"
+          pacman --noconfirm -S mingw64/mingw-w64-x86_64-opus mingw64/mingw-w64-x86_64-pkg-config
+
+          # Add the mingw64 bin directory to the PATH so cabal can find pkg-config & opus
+          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Update cabal store
+        run: cabal update
+
+      - name: Create a freeze file for the cache
+        run: cabal freeze --enable-tests
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.setup-haskell.outputs.cabal-store }}
+            dist-newstyle
+          key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('cabal.project.freeze') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.ghc }}-
+
+      - name: Run the tests
+        # Use --enable-tests until https://github.com/haskell/cabal/issues/7883
+        # is fixed, as otherwise cabal test can sometimes reach a local maxima
+        # of dependencies that bizarrely doesn't (!) include the test suite.
+        run: cabal test --enable-tests
