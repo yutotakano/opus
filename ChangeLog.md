@@ -2,6 +2,15 @@
 
 ## Unreleased Changes
 
+## 0.3.0.0
+
+- [breaking] Update Cabal package description file schema to 3.0 (can no longer run with low Cabal versions)
+- [breaking] Use opus.h for includes instead of opus/opus.h for better Windows/Mingw compatibility
+- [breaking] Use pkg-config on all platforms including Windows
+- Add CI to run tests on every pull request on GitHub
+- Modify test suite to remove dependency on `opus-tools` package (instead we now FFI into a local opus_compare.c)
+- Add Haddock documentation to all modules, values, and functions.
+
 ## 0.2.1.0
 
 - Remove stack from project as Cabal is enough and reduces complexity
