@@ -23,17 +23,37 @@ instance Storable ErrorCode where
   peek p = ErrorCode <$> peek (castPtr p)
   poke p = poke (castPtr p) . unErrorCode
 
--- | A mapping of Haskell definitions of error codes to C counterparts.
-#{enum ErrorCode, ErrorCode
-  , opus_ok               = OPUS_OK
-  , opus_bad_arg          = OPUS_BAD_ARG
-  , opus_buffer_too_small = OPUS_BUFFER_TOO_SMALL
-  , opus_internal_error   = OPUS_INTERNAL_ERROR
-  , opus_invalid_packet   = OPUS_INVALID_PACKET
-  , opus_unimplemented    = OPUS_UNIMPLEMENTED
-  , opus_invalid_state    = OPUS_INVALID_STATE
-  , opus_alloc_fail       = OPUS_ALLOC_FAIL
-  }
+-- | libopus error: No error.
+opus_ok :: ErrorCode
+opus_ok = ErrorCode (#const OPUS_OK)
+
+-- | libopus error: One or more invalid/out of range arguments.
+opus_bad_arg :: ErrorCode
+opus_bad_arg = ErrorCode (#const OPUS_BAD_ARG)
+
+-- | libopus error: Not enough bytes allocated in the buffer.
+opus_buffer_too_small :: ErrorCode
+opus_buffer_too_small = ErrorCode (#const OPUS_BUFFER_TOO_SMALL)
+
+-- | libopus error: An internal error was detected.
+opus_internal_error :: ErrorCode
+opus_internal_error = ErrorCode (#const OPUS_INTERNAL_ERROR)
+
+-- | libopus error: The compressed data passed is corrupted.
+opus_invalid_packet :: ErrorCode
+opus_invalid_packet = ErrorCode (#const OPUS_INVALID_PACKET)
+
+-- | libopus error: Invalid/unsupported request number.
+opus_unimplemented :: ErrorCode
+opus_unimplemented = ErrorCode (#const OPUS_UNIMPLEMENTED)
+
+-- | libopus error: An encoder or decoder structure is invalid or already freed.
+opus_invalid_state :: ErrorCode
+opus_invalid_state = ErrorCode (#const OPUS_INVALID_STATE)
+
+-- | libopus error: Memory allocation has failed.
+opus_alloc_fail :: ErrorCode
+opus_alloc_fail = ErrorCode (#const OPUS_ALLOC_FAIL)
 
 -- | Coding mode for the Opus encoder, represented as an int.
 newtype CodingMode = CodingMode { unCodingMode :: CInt }
@@ -47,12 +67,19 @@ instance Show CodingMode where
     | app_lowdelay == a = "lowdelay coding"
     | otherwise = "unknown coding"
 
--- | A mapping of Haskell definitions of coding modes to C counterparts.
-#{enum CodingMode, CodingMode
- , app_voip = OPUS_APPLICATION_VOIP
- , app_audio = OPUS_APPLICATION_AUDIO
- , app_lowdelay = OPUS_APPLICATION_RESTRICTED_LOWDELAY
- }
+-- | Best for most VoIP/videoconference applications where listening quality and
+-- intelligibility matter most.
+app_voip :: CodingMode
+app_voip = CodingMode (#const OPUS_APPLICATION_VOIP)
+
+-- | Best for broadcast/high-fidelity application where the decoded audio should
+-- be as close as possible to the input.
+app_audio :: CodingMode
+app_audio = CodingMode (#const OPUS_APPLICATION_AUDIO)
+
+-- | Only use when lowest-achievable latency is what matters most.
+app_lowdelay :: CodingMode
+app_lowdelay = CodingMode (#const OPUS_APPLICATION_RESTRICTED_LOWDELAY)
 
 -- | Sampling rate for the Opus encoder, represented as an int.
 newtype SamplingRate = SamplingRate { unSamplingRate :: Int }
