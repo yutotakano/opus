@@ -37,9 +37,11 @@ copyright:           Markus Barenhoff <mbarenh@alios.org>, Yuto Takano <moa17sto
 category:            Codec
 build-type:          Simple
 tested-with:         GHC ==9.4.8
-extra-source-files:
+extra-doc-files:
     README.md
     ChangeLog.md
+    LICENSE
+extra-source-files:
     test/opus_compare_wrapper.c
     test/opus_compare.c
 
@@ -60,12 +62,12 @@ library
   pkgconfig-depends:   opus
   ghc-options:         -Wall
   build-depends:       base >= 4.7 && < 5,
-                       exceptions,
-                       resourcet,
-                       bytestring,
-                       conduit,
-                       microlens,
-                       microlens-th
+                       exceptions >= 0.10.0 && < 0.11,
+                       resourcet >= 1.2.1 && < 1.4,
+                       bytestring >= 0.11.0.0 && < 0.13,
+                       conduit >= 1.3 && < 1.4,
+                       microlens >= 0.4.11.2 && < 0.5,
+                       microlens-th >= 0.4.3.11 && < 0.5,
 
 test-suite opus-test
   type: exitcode-stdio-1.0
