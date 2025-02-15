@@ -7,27 +7,21 @@ description:
     the Opus Codec (RFC 6716 and RFC 8251). The Opus codec is designed for
     interactive speech and audio transmission over the Internet, but is also
     intended for storage and streaming.
-    .
-    The library provides a an interface to the encoder and decoder, as well as a
+
+    The library provides an interface to the encoder and decoder, as well as a
     Conduit wrapper for operating with stream data.
-    .
+
     To use this library, you need to have the libopus library installed on your
-    system.
-    .
-    - On Debian-based systems, you can install it with @sudo apt-get install
-      libopus-dev@.
-    - On MacOS, you can install it with @brew install opus@ using Homebrew.
-    - On Windows (MinGW-based, e.g. GHCup toolchain), you can install it with
-      @cabal exec -- pacman -S mingw64/mingw-w64-x86_64-opus@ (for x64).
-    .
+    system. Please see the README for more info.
+
     The compiled Haskell code will link dynamically by default, so if
     you are distributing a precompiled binary, you may want to look into
     static linking.
-    .
+
     This package is a fork of the original opus package by Markus Barenhoff,
     which is no longer maintained (and was never published to Hackage).
     Permission has been granted by the original author to publish this fork
-    under the same BSD3 license.
+    with the same name under the BSD3 license.
 homepage:            https://github.com/yutotakano/opus
 license:             BSD-3-Clause
 license-file:        LICENSE
