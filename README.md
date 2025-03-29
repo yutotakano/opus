@@ -64,7 +64,7 @@ license.
 This project as a whole is licensed under the BSD-3 license. Please see the
 LICENSE file for more information.
 
-Copyright (c) 2018 Markus Barenhoff
-Copyright (c) 2021-2022 Yuto Takano
+Copyright (c) 2018 Markus Barenhoff  
+Copyright (c) 2021-2022 Yuto Takano  
 Copyright (c) 2025-PRESENT Haskell Opus Library Contributors
 
