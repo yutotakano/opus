@@ -32,6 +32,7 @@ category:            Codec
 build-type:          Simple
 tested-with:         GHC ==9.4.8
                    , GHC ==9.6.7
+                   , GHC ==9.14.1
 extra-doc-files:
     README.md
     ChangeLog.md
